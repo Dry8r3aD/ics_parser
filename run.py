@@ -4,7 +4,7 @@
 from icalendar import Calendar, Event
 from datetime import *
 from dateutil.parser import parse
-from pytz import UTC # timezone
+from pytz import UTC  # timezone
 
 cal_file = '/Users/gyyoon/Desktop/pentaa.ics'
 
@@ -21,6 +21,7 @@ BREAK_STR = '[휴식]'
 TOGETHER_CTR = '[회식]'
 SEATCLEAN_STR = '[자리정리]'
 EVENT_STR = '[행사]'
+LATE_SRT = '[지연출근]'
 
 # Count global var
 total_cnt = 0
@@ -49,9 +50,10 @@ break_dur = timedelta(hours=0, minutes=0)
 together_dur = timedelta(hours=0, minutes=0)
 seatclean_dur = timedelta(hours=0, minutes=0)
 event_dur = timedelta(hours=0, minutes=0)
+late_dur = timedelta(hours=0, minutes=0)
 
 
-def process_work_event( comp ):
+def process_work_event(comp):
     # Duration global var
     global work_dur
 
@@ -62,7 +64,7 @@ def process_work_event( comp ):
     work_dur += duration
 
 
-def process_nonwork_event( comp ):
+def process_nonwork_event(comp):
     # Duration global var
     global nonwork_dur
 
@@ -73,7 +75,7 @@ def process_nonwork_event( comp ):
     nonwork_dur += duration
 
 
-def process_meeting_event( comp ):
+def process_meeting_event(comp):
     # Duration global var
     global meeting_dur
 
@@ -84,7 +86,7 @@ def process_meeting_event( comp ):
     meeting_dur += duration
 
 
-def process_lunch_event( comp ):
+def process_lunch_event(comp):
     # Duration global var
     global lunch_dur
 
@@ -95,7 +97,7 @@ def process_lunch_event( comp ):
     lunch_dur += duration
 
 
-def process_club_event( comp ):
+def process_club_event(comp):
     # Duration global var
     global club_dur
 
@@ -106,7 +108,7 @@ def process_club_event( comp ):
     club_dur += duration
 
 
-def process_workclean_event( comp ):
+def process_workclean_event(comp):
     # Duration global var
     global workclean_dur
 
@@ -117,7 +119,7 @@ def process_workclean_event( comp ):
     workclean_dur += duration
 
 
-def process_outwork_event( comp ):
+def process_outwork_event(comp):
     # Duration global var
     global outwork_dur
 
@@ -128,7 +130,7 @@ def process_outwork_event( comp ):
     outwork_dur += duration
 
 
-def process_break_event( comp ):
+def process_break_event(comp):
     # Duration global var
     global break_dur
 
@@ -139,7 +141,7 @@ def process_break_event( comp ):
     break_dur += duration
 
 
-def process_together_event( comp ):
+def process_together_event(comp):
     # Duration global var
     global together_dur
 
@@ -150,7 +152,7 @@ def process_together_event( comp ):
     together_dur += duration
 
 
-def process_seatclean_event( comp ):
+def process_seatclean_event(comp):
     # Duration global var
     global seatclean_dur
 
@@ -161,7 +163,7 @@ def process_seatclean_event( comp ):
     seatclean_dur += duration
 
 
-def process_event_event( comp ):
+def process_event_event(comp):
     # Duration global var
     global event_dur
 
@@ -172,10 +174,20 @@ def process_event_event( comp ):
     event_dur += duration
 
 
+def process_late_event(comp):
+    global late_dur
+
+    start_dt = comp.get('dtstart').dt
+    end_dt = comp.get('dtend').dt
+    duration = end_dt - start_dt
+
+    late_dur += duration
+
+
 def print_results():
     print('----------------------------------')
 
-    print('total count : ' + str(total_cnt) )
+    print('total count : ' + str(total_cnt))
     print('meeting : ' + str(meeting_cnt))
     print('work : ' + str(work_cnt))
     print('nonwork : ' + str(nonwork_cnt))
@@ -195,20 +207,21 @@ def print_results():
     print('together dur : ' + str(together_dur))
     print('seatclean dur : ' + str(seatclean_dur))
     print('event dur : ' + str(event_dur))
+    print('late dur : ' + str(late_dur))
 
     print('----------------------------------')
 
 
-class eventProcessor():
-    def __init__:
+class EventProcessor:
+    def __init__(self):
         print('Initialize')
 
-    def calc_event_duration( component ):
-        start_dt = component.get('dtstart').dt
-        end_dt = component.get('dtend').dt
+    def calc_event_duration(self, comp):
+        start_dt = comp.get('dtstart').dt
+        end_dt = comp.get('dtend').dt
         duration = end_dt - start_dt
 
-        return duuration
+        return duration
 
 
 def main():
@@ -226,8 +239,9 @@ def main():
     global seatclean_cnt
     global event_cnt
     global unknown_cnt
+    global late_dur
 
-    g = open(cal_file,'rb')
+    g = open(cal_file, 'rb')
     gcal = Calendar.from_ical(g.read())
 
     for component in gcal.walk():
@@ -244,66 +258,67 @@ def main():
             if type(end_date) != type(date(2018, 4, 4)):
                 end_date = end_date.date()
 
-
-            # 1 Half.
-            # Maybe perhaps someday I should get inputs from user that specifies
+            # Maybe someday I might get inputs from user that specifies
             # the date range...
-            if start_date >= date(2018, 1, 1) and end_date <= date(2018, 6, 30):
+            if start_date >= date(2018, 1, 1) and end_date <= date(2018, 12, 31):
                 total_cnt += 1
 
                 event_summary = component.get('summary')
 
                 if WORK_STR in event_summary:
                     work_cnt += 1
-                    process_work_event( component )
+                    process_work_event(component)
+                    print(event_summary)
 
                 elif MEETING_STR in event_summary or TEATIME_STR in \
                         event_summary or TALK_STR in event_summary:
                     meeting_cnt += 1
-                    process_meeting_event( component )
+                    process_meeting_event(component)
 
                 elif NONWORK_STR in event_summary:
                     nonwork_cnt += 1
-                    process_nonwork_event( component )
+                    process_nonwork_event(component)
 
                 elif LUNCH_STR in event_summary:
                     lunch_cnt += 1
-                    process_lunch_event( component )
+                    process_lunch_event(component)
 
                 elif CLUB_STR in event_summary:
                     club_cnt += 1
-                    process_club_event( component )
+                    process_club_event(component)
 
                 elif WORKCLEAN_STR in event_summary:
                     workclean_cnt += 1
-                    process_workclean_event( component )
+                    process_workclean_event(component)
 
                 elif OUTWORK_STR in event_summary:
                     outwork_cnt += 1
-                    process_outwork_event( component )
+                    process_outwork_event(component)
 
                 elif BREAK_STR in event_summary:
                     break_cnt += 1
-                    process_break_event( component )
+                    process_break_event(component)
 
                 elif TOGETHER_CTR in event_summary:
                     together_cnt += 1
-                    process_together_event( component )
+                    process_together_event(component)
 
                 elif SEATCLEAN_STR in event_summary:
                     seatclean_cnt += 1
-                    process_seatclean_event( component )
+                    process_seatclean_event(component)
 
                 elif EVENT_STR in event_summary:
                     event_cnt += 1
-                    process_event_event( component )
-
+                    process_event_event(component)
+                elif LATE_SRT in event_summary:
+                    event_cnt += 1
+                    process_late_event(component)
                 else:
                     unknown_cnt += 1
-                    print(event_summary)
-                    print(component.get('dtstart').dt)
-                    print(component.get('dtend').dt)
-                    print(component.get('dtstamp').dt)
+                    # print(event_summary)
+                    # print(component.get('dtstart').dt)
+                    # print(component.get('dtend').dt)
+                    # print(component.get('dtstamp').dt)
     g.close()
 
     print_results()
@@ -311,4 +326,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
